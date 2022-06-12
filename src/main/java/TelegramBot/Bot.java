@@ -89,76 +89,39 @@ public class Bot extends TelegramLongPollingBot {
 
     @SneakyThrows
     private void answerGetFromStudent(Update update, Message message, String idStudent) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(idStudent);
-        sendMessage.setText(".");
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> Buttons = new ArrayList<>();
-
-        List<InlineKeyboardButton> keyboardRow1 = new ArrayList<>();
-        InlineKeyboardButton doesntMatchAll = new InlineKeyboardButton();
-        doesntMatchAll.setText("совсем не соответствует");
-        keyboardRow1.add(doesntMatchAll);
-
-        List<InlineKeyboardButton> keyboardRow2 = new ArrayList<>();
-        InlineKeyboardButton doesntCorrespond = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("скорее не соответствует");
-        keyboardRow2.add(doesntCorrespond);
-
-        List<InlineKeyboardButton> keyboardRow3 = new ArrayList<>();
-        InlineKeyboardButton somethingBetween = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("нечто среднее");
-        keyboardRow3.add(somethingBetween);
-
-        List<InlineKeyboardButton> keyboardRow4 = new ArrayList<>();
-        InlineKeyboardButton ratherCorresponds = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("скорее соответствует");
-        keyboardRow4.add(ratherCorresponds);
-
-        List<InlineKeyboardButton> keyboardRow5 = new ArrayList<>();
-        InlineKeyboardButton quiteConsistent = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("вполне соответствует");
-        keyboardRow5.add(quiteConsistent);
-
-        inlineKeyboardMarkup.setKeyboard(Buttons);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-        sendMessage.();
-        execute(sendMessage);
 
         if (message.getText().equals("совсем не соответствует")) {
             valueAnswer = 0;
             arrayListAnswersSOAM.add(valueAnswer);
-            execute(message);
+            sendMessageQuestions(message, idStudent);
             amountAnswersSOAM++;
         }
 
         if (message.getText().equals("скорее не соответствует")) {
             valueAnswer = 1;
             arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message);
+            sendMessageQuestions(message, idStudent);
             amountAnswersSOAM++;
         }
 
         if (message.getText().equals("нечто среднее")) {
             valueAnswer = 2;
             arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message);
+            sendMessageQuestions(message, idStudent);
             amountAnswersSOAM++;
         }
 
         if (message.getText().equals("скорее соответствует")) {
             valueAnswer = 3;
             arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message);
+            sendMessageQuestions(message, idStudent);
             amountAnswersSOAM++;
         }
 
         if (message.getText().equals("вполне соответствует")) {
             valueAnswer = 4;
             arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message);
+            sendMessageQuestions(message, idStudent);
             amountAnswersSOAM++;
         }
     }
@@ -253,7 +216,7 @@ public class Bot extends TelegramLongPollingBot {
                 "5) вполне соответствует";
 
         String mainQuestion = "Почему Вы в настоящее время посещаете курсы?";
-        sendMessageQuestions(message);
+        sendMessageQuestions(message, idStudent);
         SendMessage sendMessagesManual = new SendMessage(idStudent, manual);
         execute(sendMessagesManual);
         sendMessagesManual = new SendMessage(idStudent, mainQuestion);
@@ -386,9 +349,19 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    public void setAnswerMenuButtons(SendMessage sendMessage) {
+    public void sendMessageQuestions(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText(".");
+        setAnswerMenuButtons(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    public void setAnswerMenuButtons(SendMessage sendMessage, String idStudent) {
         SendMessage message = new SendMessage();
-        sendMessage.setChatId("711028535");
+        sendMessage.setChatId(idStudent);
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
@@ -416,7 +389,7 @@ public class Bot extends TelegramLongPollingBot {
         InlineKeyboardButton quiteConsistent = new InlineKeyboardButton();
         doesntMatchAll.setCallbackData("вполне соответствует");
 
-    //    keyboardRow1.add(doesntMatchAll);
+        keyboardRow1.add(doesntMatchAll);
 
         Buttons.add(doesntMatchAll);
         Buttons.add(doesntCorrespond);
@@ -424,7 +397,7 @@ public class Bot extends TelegramLongPollingBot {
         Buttons.add(ratherCorresponds);
         Buttons.add(quiteConsistent);
 
-       // inlineKeyboardMarkup.setKeyboard(keyboard);
+        inlineKeyboardMarkup.setKeyboard(keyboard);
         message.setReplyMarkup(inlineKeyboardMarkup);
         execute(message);
     }
