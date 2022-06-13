@@ -1,5 +1,7 @@
 package TelegramBot;
 
+import Questionnaire.AttitudeToThOccupation;
+import Questionnaire.AttitudeToTheTask;
 import Questionnaire.ScalesOfAcademicMotivation;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.SneakyThrows;
@@ -21,12 +23,18 @@ import static com.vdurmont.emoji.EmojiParser.parseToUnicode;
 public class Bot extends TelegramLongPollingBot {
 
     int amountAnswersSOAM = 0;
+    int amountAnswerVFM = 0;
+
     int valueAnswer = 0;
+
     boolean isStartTestSOAM = false;
-    boolean isStartTestVeryFastMethod = false;
-    boolean isStartTestAfterTask = false;
+    boolean isStartTestVFM = false;
+    boolean isStartTestAT = false;
 
     ArrayList<Integer> arrayListAnswersSOAM = new ArrayList();
+    ArrayList<Integer> arrayListAnswersVFM = new ArrayList();
+    ArrayList<Integer> arrayListAnswersAT = new ArrayList();
+
     String studentGeneralGoal = "Твоя Цель";
 
     @SneakyThrows
@@ -54,6 +62,7 @@ public class Bot extends TelegramLongPollingBot {
                         "Теперь поразмышляй о том, как можно добиться этого? Какими способами? Как тебе в этом поможет обучение?\n\n" + "Подумай минутку и напиши свою цель";
                 SendMessage sendMessagesHelpTextGoal = new SendMessage(update.getMessage().getChatId().toString(), helpTextGoal);
                 execute(sendMessagesHelpTextGoal);
+                sendMessageMenuGoal(message, idStudent);
             }
 
             if (message.getText().equalsIgnoreCase("Покажи динамику")) {
@@ -76,15 +85,35 @@ public class Bot extends TelegramLongPollingBot {
             }
 
             measurementMotivationStudent(update, message, idStudent, amountAnswersSOAM, isStartTestSOAM);
-            answerGetFromStudent(update, message, idStudent);
+            answerGetFromStudent(update, message, idStudent,isStartTestSOAM);
             motivationOutputInformation(update, message, idStudent, amountAnswersSOAM);
 
 
             if (message.getText().equalsIgnoreCase("Настройки бота"))
                 sendMessageInMainMenu(message, idStudent);
 
-            if (message.getText().equalsIgnoreCase("Рефлексия"))
-                sendMessageInMainMenu(message, idStudent);
+            if (message.getText().equalsIgnoreCase("Рефлексия")) {
+                sendMessageInReflectionOpen(message, idStudent);
+            }
+
+            if (message.getText().equalsIgnoreCase("После онлайн-урока")) {
+                isStartTestVFM = true;
+                isStartTestAT = true;
+                sendMessageInReflectionOnlineLessonMenu(message, idStudent);
+            }
+
+
+            if (message.getText().equalsIgnoreCase("В форме опроса")) {
+                sendMessageInReflectionOpen(message, idStudent);
+            }
+
+            if (message.getText().equalsIgnoreCase("Очень быстрая методика")) {
+                sendMessageInVeryFasMethod(message, idStudent);
+            }
+            System.out.println("amountAnswerVFM = " + amountAnswerVFM);
+            System.out.println("isStartTestVFM = "+ isStartTestVFM);
+            measurementVeryFastMethode(update, message, idStudent, amountAnswerVFM, isStartTestVFM);
+            answerGetFromStudentVeryFastMethode(update, message, idStudent, isStartTestVFM);
 
             if (message.getText().equalsIgnoreCase("Подбодри и Замотивируй меня"))
                 sendMessageInMainMenu(message, idStudent);
@@ -93,50 +122,69 @@ public class Bot extends TelegramLongPollingBot {
                 sendMessageInMainMenu(message, idStudent);
             }
 
-            if (message.getText().equalsIgnoreCase("После онлайн-урока")) {
-                sendMessageInMainMenu(message, idStudent);
-            }
+        }
+    }
 
+    private void answerGetFromStudentVeryFastMethode(Update update, Message message, String idStudent, boolean isStartTestVFM) {
+        int valueAnswerVFM = Integer.parseInt(message.getText());
+
+        if (isStartTestVFM) {
+            arrayListAnswersVFM.add(valueAnswerVFM);
+            sendMessageInVeryFasMethod(message, idStudent);
+            amountAnswerVFM++;
         }
 
     }
 
+
     @SneakyThrows
-    private void answerGetFromStudent(Update update, Message message, String idStudent) {
-
-        if (message.getText().equals("совсем не соответствует")) {
-            valueAnswer = 0;
-            arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message, idStudent);
-            amountAnswersSOAM++;
+    private void measurementVeryFastMethode(Update update, Message message, String idStudent, int amountAnswerVFM, boolean isStartTestVFM) {
+        AttitudeToThOccupation att = new AttitudeToThOccupation();
+        SendMessage sendMessageQuestion = new SendMessage();
+        if (amountAnswerVFM < 6 && isStartTestSOAM) {
+            String question = att.sendQuestionsToStudentATO(amountAnswerVFM);
+            sendMessageQuestion = new SendMessage(idStudent, question);
+            execute(sendMessageQuestion);
         }
+    }
 
-        if (message.getText().equals("скорее не соответствует")) {
-            valueAnswer = 1;
-            arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message, idStudent);
-            amountAnswersSOAM++;
-        }
+    @SneakyThrows
+    private void answerGetFromStudent(Update update, Message message, String idStudent, boolean isStartTestSOAM) {
+        if (isStartTestSOAM) {
+            if (message.getText().equals("совсем не соответствует")) {
+                valueAnswer = 0;
+                arrayListAnswersSOAM.add(valueAnswer);
+                sendMessageQuestions(message, idStudent);
+                amountAnswersSOAM++;
+            }
 
-        if (message.getText().equals("нечто среднее")) {
-            valueAnswer = 2;
-            arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message, idStudent);
-            amountAnswersSOAM++;
-        }
+            if (message.getText().equals("скорее не соответствует")) {
+                valueAnswer = 1;
+                arrayListAnswersSOAM.add(valueAnswer);
+                sendMessageQuestions(message, idStudent);
+                amountAnswersSOAM++;
+            }
 
-        if (message.getText().equals("скорее соответствует")) {
-            valueAnswer = 3;
-            arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message, idStudent);
-            amountAnswersSOAM++;
-        }
+            if (message.getText().equals("нечто среднее")) {
+                valueAnswer = 2;
+                arrayListAnswersSOAM.add(valueAnswer);
+                sendMessageQuestions(message, idStudent);
+                amountAnswersSOAM++;
+            }
 
-        if (message.getText().equals("вполне соответствует")) {
-            valueAnswer = 4;
-            arrayListAnswersSOAM.add(valueAnswer);
-            sendMessageQuestions(message, idStudent);
-            amountAnswersSOAM++;
+            if (message.getText().equals("скорее соответствует")) {
+                valueAnswer = 3;
+                arrayListAnswersSOAM.add(valueAnswer);
+                sendMessageQuestions(message, idStudent);
+                amountAnswersSOAM++;
+            }
+
+            if (message.getText().equals("вполне соответствует")) {
+                valueAnswer = 4;
+                arrayListAnswersSOAM.add(valueAnswer);
+                sendMessageQuestions(message, idStudent);
+                amountAnswersSOAM++;
+            }
         }
     }
 
@@ -243,13 +291,16 @@ public class Bot extends TelegramLongPollingBot {
 
     @SneakyThrows
     private void measurementMotivationStudent(Update update, Message message, String idStudent, int amountAnswersSOAM, boolean isStartTestSOAM) {
-        ScalesOfAcademicMotivation soam = new ScalesOfAcademicMotivation();
-        SendMessage sendMessageQuestion = new SendMessage();
-        if (amountAnswersSOAM < 16 && isStartTestSOAM) {
-            String question = soam.sendQuestionsToStudent(amountAnswersSOAM);
-            sendMessageQuestion = new SendMessage(idStudent, question);
-            execute(sendMessageQuestion);
+        if(isStartTestSOAM){
+            ScalesOfAcademicMotivation soam = new ScalesOfAcademicMotivation();
+            SendMessage sendMessageQuestion = new SendMessage();
+            if (amountAnswersSOAM < 16) {
+                String question = soam.sendQuestionsToStudent(amountAnswersSOAM);
+                sendMessageQuestion = new SendMessage(idStudent, question);
+                execute(sendMessageQuestion);
+            }
         }
+
     }
 
     @SneakyThrows
@@ -282,8 +333,10 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage messageGreetings = new SendMessage(idStudent, greetings);
         execute(messageGreetings);
         sendMessageInMainMenu(message, idStudent);
+        amountAnswerVFM = 0;
         amountAnswersSOAM = 0;
         isStartTestSOAM = false;
+        isStartTestVFM = false;
     }
 
     @Override
@@ -365,12 +418,12 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    public void sendMessageInAfterTask(Message message, String idStudent) {
+    public void sendMessageInReflectionOnlineLessonMenu(Message message, String idStudent) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(idStudent);
         sendMessage.setText("Ваш ответ:");
-        buttonsOneToTen(sendMessage, idStudent);
+        reflectionOnlineLessonMenu(sendMessage, idStudent);
         execute(sendMessage);
     }
 
@@ -598,41 +651,14 @@ public class Bot extends TelegramLongPollingBot {
 
         KeyboardRow row = new KeyboardRow();
         row.add("1");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("2");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("3");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("4");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("5");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("6");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("7");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("8");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("9");
-        keyboardRowsList.add(row);
-
-        row = new KeyboardRow();
         row.add("10");
         keyboardRowsList.add(row);
 
@@ -691,9 +717,6 @@ public class Bot extends TelegramLongPollingBot {
         cheerMeUpMenu(sendMessage, idStudent);
         execute(sendMessage);
     }
-
-
-
 
     public void emotionVideoMenu(SendMessage sendMessage, String idStudent) {
         SendMessage message = new SendMessage();
