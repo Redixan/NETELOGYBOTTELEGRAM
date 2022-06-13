@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static com.vdurmont.emoji.EmojiParser.parseToUnicode;
 
@@ -45,18 +46,18 @@ public class Bot extends TelegramLongPollingBot {
             Message message = update.getMessage();
             String idStudent = update.getMessage().getChatId().toString();
 
-            if (message.getText().equals("/start"))
+            if (message.getText().equalsIgnoreCase("/start"))
                 greetingsFromBot(update, message, idStudent);
 
-            if (message.getText().equals("Моя Цель")) {
+            if (message.getText().equalsIgnoreCase("Моя Цель")) {
                 sendMessageMenuGoal(message, idStudent);
             }
 
-            if (message.getText().equals("Изменить цель")) {
+            if (message.getText().equalsIgnoreCase("Изменить цель")) {
                 sendMessageInMainMenu(message, idStudent);
             }
 
-            if (message.getText().equals("Помоги поставить цель")) {
+            if (message.getText().equalsIgnoreCase("Помоги поставить цель")) {
 
                 String helpTextGoal = "Если у тебя есть немного времени, подумай что в жизни тебя больше всего вдохновляет, какой бы ты хотел(а) видеть свою жизнь в будущем.\n" +
                         "Теперь поразмышляй о том, как можно добиться этого? Какими способами? Как тебе в этом поможет обучение?\n\n" + "Подумай минутку и напиши свою цель";
@@ -85,12 +86,23 @@ public class Bot extends TelegramLongPollingBot {
             }
 
             measurementMotivationStudent(update, message, idStudent, amountAnswersSOAM, isStartTestSOAM);
-            answerGetFromStudent(update, message, idStudent,isStartTestSOAM);
+            measurementMotivationStudent(update, message, idStudent, amountAnswersSOAM, isStartTestSOAM);
+            answerGetFromStudent(update, message, idStudent, isStartTestSOAM);
             motivationOutputInformation(update, message, idStudent, amountAnswersSOAM);
 
 
             if (message.getText().equalsIgnoreCase("Настройки бота"))
                 sendMessageInMainMenu(message, idStudent);
+
+            if (message.getText().equalsIgnoreCase("После видео-урока"))
+                showAllQuestionsNoEndSenetenses(message, idStudent);
+
+            if (message.getText().equalsIgnoreCase("УНИВЕРСАЛЬНАЯ")) {
+                showAllQuestionsUniversal(message, idStudent);
+            }
+            if (message.getText().equalsIgnoreCase("ПОСЛЕ ВЫПОЛНЕНИЯ ПРОЕКТА ИЛИ ДЗ")) {
+                showAllQuestionsAfterHomeTask(message, idStudent);
+            }
 
             if (message.getText().equalsIgnoreCase("Рефлексия")) {
                 sendMessageInReflectionOpen(message, idStudent);
@@ -102,31 +114,254 @@ public class Bot extends TelegramLongPollingBot {
                 sendMessageInReflectionOnlineLessonMenu(message, idStudent);
             }
 
+            if (message.getText().equalsIgnoreCase("ПОСЛЕ ВИДЕО-УРОКА")) {
+                sendMessageInReflectionOpen(message, idStudent);
+            }
+            if (message.getText().equalsIgnoreCase("Незаконченные предложения")) {
+                showAllQuestionsNoEndSenetenses(message, idStudent);
+            }
 
             if (message.getText().equalsIgnoreCase("В форме опроса")) {
-                sendMessageInReflectionOpen(message, idStudent);
+                showAllQuestionsFormInterview(message, idStudent);
+            }
+
+            if (message.getText().equalsIgnoreCase("ПОСЛЕ РЕФЛЕКСИИ")) {
+                showAllQuestionsAfterReflection(message, idStudent);
             }
 
             if (message.getText().equalsIgnoreCase("Очень быстрая методика")) {
-                sendMessageInVeryFastMethod(message, idStudent);
+                // sendMessageInVeryFastMethod(message, idStudent);
+                showAllQuestionsVFM(message, idStudent);
             }
 
-            measurementVeryFastMethode(update, message, idStudent, amountAnswerVFM, isStartTestVFM);
-            answerGetFromStudentVeryFastMethode(update, message, idStudent, isStartTestVFM);
+            if (message.getText().equalsIgnoreCase("ПОДБОДРИ И ЗАМОТИВИРУЙ МЕНЯ")) {
+                sendMessageCheerMeUp(message, idStudent);
+            }
 
-            if (message.getText().equalsIgnoreCase("Подбодри и Замотивируй меня"))
+            if (message.getText().equalsIgnoreCase("ЗАМОТИВИРУЙ МЕНЯ ВИДЕОРОЛИКОМ")) {
+                sendMessageCheerMeUp(message, idStudent);
+                ArrayList<String> MotivateMeVideo = new ArrayList();
+
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=SzJ4xIfgWvw»");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=bnPUVK69UgE");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=UTTAebnKwjE");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=WsDIWEqbNOc");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=ED_mD6loF4E");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=W1f8JRznDrA");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=L4X-djwwyN8");
+                MotivateMeVideo.add("https://youtu.be/od2wvfpNoLI?t=15");
+                MotivateMeVideo.add("https://www.youtube.com/watch?v=Vosaz4H--z8");
+                Random r = new Random();
+                int index = r.nextInt(MotivateMeVideo.size());
+                SendMessage messageVideo = new SendMessage(idStudent, MotivateMeVideo.get(index));
+                execute(messageVideo);
+            }
+
+            if (message.getText().equalsIgnoreCase("ЗАМОТИВИРУЙ МЕНЯ СЛОВАМИ")) {
+                sendMessageCheerMeUp(message, idStudent);
+                ArrayList<String> motivationalQuote = new ArrayList();
+
+                motivationalQuote.add("Ошибки совершать не страшно. Главное каждый раз ошибаться в чем-то новом. (Илон Маск)");
+                motivationalQuote.add("Главный игрок в команде необязательно тот, кто забрасывает больше всего мячей, это может быть тот, кто дает пасы. (Илон Маск)");
+                motivationalQuote.add("Между успехом и неудачей лежит пропасть, имя которой «у меня нет времени». (Франклин Филд)");
+                motivationalQuote.add("Дисциплина – это решение делать то, чего очень не хочется делать, чтобы достичь того, чего очень хочется достичь. (Джон Максвелл)");
+                motivationalQuote.add("Есть только один способ избежать критики – ничего не делать, ничего не говорить и быть никем. (Аристотель)");
+                motivationalQuote.add("Я – не то, что со мной случилось, я – то, чем я решил стать. (Карл Густав Юнг)");
+                motivationalQuote.add("Физические упражнения, если ими заниматься должным образом, помогают человеку стать здоровее, а умственные – богаче. Лень же лишает человека и здоровья, и богатства. (Роберт Кийосаки)");
+                motivationalQuote.add("If you fall asleep now, you will dream. If you study now, you will live your dream. (Если ты сейчас уснешь, то тебе приснится твоя мечта, но если ты сейчас будешь учиться, то воплотишь свою мечту в жизнь)");
+                motivationalQuote.add("The pain of studying is only temporary. But the pain of not knowing – ignorance — is forever. (Боль учения лишь временна. Боль незнания – невежество – вечна).");
+                motivationalQuote.add("Studying is not about time. It’s about effort. (Учеба – это не время. Учеба – это усилия).");
+                motivationalQuote.add("Life is not all about studying. But if you can’t even conquer this little part of life, then what else can you possibly do (Жизнь – это не только учеба, но если ты не можешь пройти даже через эту ее часть, как ты будешь знать, на что способен)");
+                motivationalQuote.add("It’s those who are earlier than the others, those who put in more effort, who can enjoy the feelings of success. (Учись делать все раньше, учись прилагать усилия, учись наслаждаться результатами).");
+                motivationalQuote.add("Not everyone can truly succeed in everything. But success only comes with self-management and determination. (Не все могут по-настоящему преуспеть во всем. Но успех приходит только с самосовершенствованием и решительностью).");
+                motivationalQuote.add("f you don’t walk today, you’ll have to run tomorrow. (Если ты не идешь сегодня, завтра тебе придется бежать).");
+                motivationalQuote.add("People who invest in the future are realists. (Люди, которые вкладывают что-то в будущее — реалисты).");
+                motivationalQuote.add("The level of education is in direct correlation with your salary. (Твоя зарплата прямо пропорциональна твоему уровню образования).");
+                motivationalQuote.add("Even now, your enemies are eagerly flipping through books. (Даже сейчас твои соперники листают умные книги).");
+                motivationalQuote.add("“Чтобы дойти до цели, надо прежде всего идти.” Оноре де Бальзак");
+                motivationalQuote.add("“Самой большой ошибкой, которую вы можете совершить в жизни, является постоянная боязнь ошибаться.” Элберт Хаббард");
+                motivationalQuote.add("“Знание – сокровищница, но ключ к ней – практика.” Фуллер Томас");
+                motivationalQuote.add("“Судьба человека, который сидит сиднем, тоже с места не двигается.” Филип Фармер");
+                motivationalQuote.add("“Ты не можешь менять направление ветра, но всегда можешь поднять паруса, чтобы достичь своей цели.” Оскар Уайлд");
+
+                Random r = new Random();
+                int index = r.nextInt(motivationalQuote.size());
+                SendMessage messageVideo = new SendMessage(idStudent, motivationalQuote.get(index));
+                execute(messageVideo);
+            }
+
+
+            if (message.getText().equalsIgnoreCase("ГЛАВНОЕ МЕНЮ")) {
                 sendMessageInMainMenu(message, idStudent);
+            }
 
-            if (message.getText().equalsIgnoreCase("Главное меню")) {
+            if (message.getText().equals("НАЗАД <=")) {
                 sendMessageInMainMenu(message, idStudent);
             }
 
         }
     }
 
+    @SneakyThrows
+    private void showAllQuestionsFormInterview(Message message, String idStudent) {
+
+        String allAnswers = " Очень быстрая методика\n" +
+                "\n" +
+                "На шкале от 1 до 10 отметь число, которое отражает твое отношение к занятию и степень участия в уроке. Можешь отвечать на вопросы в чат или устно.\n" +
+                "\n" +
+                "1. Я считаю, что занятие было\n" +
+                "скучным 1 2 3 4 5 6 7 8 9 10 интересным.\n" +
+                "\n" +
+                "2.Я научился\n" +
+                "малому  1 2 3 4 5 6 7 8 9 10   многому.\n" +
+                "\n" +
+                "3. Я думаю, что слушал\n" +
+                "невнимательно   1 2 3 4 5 6 7 8 9 10   внимательно.\n" +
+                "\n" +
+                "4. Я принимал участие в дискуссии\n" +
+                "редко  1 2 3 4 5 6 7 8 9 10   часто.\n" +
+                "\n" +
+                "5. Материал был мне\n" +
+                "непонятен 1 2 3 4 5 6 7 8 9 10   понятен.\n" +
+                "\n" +
+                "6. Результатами своей работы на уроке я\n" +
+                "не доволен   1 2 3 4 5 6 7 8 9 10  доволен";
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    private void showAllQuestionsAfterReflection(Message message, String idStudent) {
+
+        String allAnswers = "После рефлексии:\n" +
+                "\n" +
+                "Если ты уже порефлексировал с помощью одной из наших методик (или самостоятельно), то можешь попробовать порефлексировать о рефлексии.\n" +
+                "\n" +
+                "Давай обдумаем результаты проведенной тобой рефлексии. Отвечай на вопросы устно или в чат.\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "1. Какие идеи, предположения, закономерности, ответы на вопросы тебе открылись?\n" +
+                "\n" +
+                "2. Какие способы работы с информацией использовались или создавались (изобретались) в ходе деятельности о которой ты рефлексировал?\n" +
+                "\n" +
+                "3. Выскажи свои гипотезы по отношению к будущей деятельности: как изменятся твои умения и результаты в будущем?\n" +
+                "\n" +
+                "4. Оцени от 1 до 5 качество рефлексии, которую ты провел.\n" +
+                "\n";
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    private void showAllQuestionsAfterHomeTask(Message message, String idStudent) {
+
+        String allAnswers = "После выполнения проекта или ДЗ\n" +
+                "На шкале от 1 до 10 отметь число, которое отражает твое отношение к занятию и степень участия в уроке. Отвечай на вопросы устно или в чат.\n" +
+                "\n" +
+                "\n" +
+                "1. Я считаю, что задание было\n" +
+                "скучным 1 2 3 4 5 6 7 8 9 10   интересным.\n" +
+                "\n" +
+                "2.Я научился\n" +
+                "малому  1 2 3 4 5 6 7 8 9 10   многому.\n" +
+                "\n" +
+                "3. Выполнить задание было\n" +
+                "легко 1 2 3 4 5 6 7 8 9 10   сложно.\n" +
+                "\n" +
+                "5. Результатами своей работы я\n" +
+                "не доволен   1 2 3 4 5 6 7 8 9 10   доволен.\n" +
+                "\n" +
+                "\n" +
+                "Давай обдумаем результаты проведенной тобой работы.\n" +
+                "\n" +
+                "6. Выполнил ли я то, что задумал?\n" +
+                "7. Получилось ли достичь главный результат проекта?\n" +
+                "8. Всё ли получилось так, как я задумывал?\n" +
+                "9. Что было сделано хорошо?\n" +
+                "10. Что было сделано плохо?\n" +
+                "11. Что было выполнить легко?\n" +
+                "12. Что оказалось выполнить неожиданно трудно?\n" +
+                "13. Кто мог бы сказать мне СПАСИБО за проект?\n" +
+                "14. Что было самым интересным в задании?\n" +
+                "15. Какие эмоции я ощущал при выполнении задания?";
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    private void showAllQuestionsNoEndSenetenses(Message message, String idStudent) {
+
+        String allAnswers = " Неоконченные предложения\n" +
+                "\n" +
+                "Дополни предложения так, чтобы они как можно точнее описывали тебя во время и после урока. Отвечай устно или в чат.\n" +
+                "\n" +
+                "Я узнал...\n" +
+                "Я научился...\n" +
+                "Я понял, что могу...\n" +
+                "Мне понравилось...\n" +
+                "Для меня стало новым...\n" +
+                "Меня удивило...\n" +
+                "У меня получилось...\n" +
+                "Я приобрѐл...\n" +
+                "Мне захотелось глубже узнать...\n" +
+                "Меня воодушевило...\n";
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    private void showAllQuestionsUniversal(Message message, String idStudent) {
+        String allAnswers = " \n" +
+                "Универсальная\n" +
+                "\n" +
+                "Давай обдумаем результаты проведенной тобой работы. Отвечай на вопросы устно или в чат.\n" +
+                "\n" +
+                "1. Каковы ваши главные результаты, что вы поняли, чему научились?\n" +
+                "2. Какие задания вызвали наибольший интерес и почему?\n" +
+                "3. Как вы выполняли задания, какими способами? Что вы чувствовали при этом?\n" +
+                "4. С какими трудностями вы столкнулись и как вы их преодолевали?\n" +
+                "5. Каковы замечания и предложения на будущее (себе, преподавателю)?\n";
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    private void showAllQuestionsVFM(Message message, String idStudent) {
+        String allAnswers = " Очень быстрая методика\n" +
+                "\n" +
+                "На шкале от 1 до 10 отметь число, которое отражает твое отношение к занятию и степень участия в уроке.Можешь отвечать на вопросы в чат или устно.\n" +
+                "\n" +
+                "1. Я считаю, что занятие было\n" +
+                "скучным 1 2 3 4 5 6 7 8 9 10 интересным.\n" +
+                "\n" +
+                "2.Я научился\n" +
+                "малому  1 2 3 4 5 6 7 8 9 10   многому.\n" +
+                "\n" +
+                "3. Я думаю, что слушал\n" +
+                "невнимательно   1 2 3 4 5 6 7 8 9 10   внимательно.\n" +
+                "\n" +
+                "4. Я принимал участие в дискуссии\n" +
+                "редко  1 2 3 4 5 6 7 8 9 10   часто.\n" +
+                "\n" +
+                "5. Материал был мне\n" +
+                "непонятен 1 2 3 4 5 6 7 8 9 10   понятен.\n" +
+                "\n" +
+                "6. Результатами своей работы на уроке я\n" +
+                "не доволен   1 2 3 4 5 6 7 8 9 10  доволен";
+
+
+        SendMessage sendMessage = new SendMessage(idStudent, allAnswers);
+        execute(sendMessage);
+    }
+
     private void answerGetFromStudentVeryFastMethode(Update update, Message message, String idStudent, boolean isStartTestVFM) {
         int valueAnswerVFM = Integer.parseInt(message.getText());
-
         if (isStartTestVFM) {
             amountAnswerVFM++;
             arrayListAnswersVFM.add(valueAnswerVFM);
@@ -291,16 +526,13 @@ public class Bot extends TelegramLongPollingBot {
 
     @SneakyThrows
     private void measurementMotivationStudent(Update update, Message message, String idStudent, int amountAnswersSOAM, boolean isStartTestSOAM) {
-        if(isStartTestSOAM){
-            ScalesOfAcademicMotivation soam = new ScalesOfAcademicMotivation();
-            SendMessage sendMessageQuestion = new SendMessage();
-            if (amountAnswersSOAM < 16) {
-                String question = soam.sendQuestionsToStudent(amountAnswersSOAM);
-                sendMessageQuestion = new SendMessage(idStudent, question);
-                execute(sendMessageQuestion);
-            }
+        ScalesOfAcademicMotivation soam = new ScalesOfAcademicMotivation();
+        SendMessage sendMessageQuestion = new SendMessage();
+        if (amountAnswersSOAM < 16 && isStartTestSOAM) {
+            String question = soam.sendQuestionsToStudent(amountAnswersSOAM);
+            sendMessageQuestion = new SendMessage(idStudent, question);
+            execute(sendMessageQuestion);
         }
-
     }
 
     @SneakyThrows
@@ -330,15 +562,16 @@ public class Bot extends TelegramLongPollingBot {
                 "\n" +
                 "Данные полученные от тебя в этих тестах помогут скорректировать твой учебный процесс так, чтобы курс принес тебе еще больше пользы!";
 
-        String makeNotification = "Расписание занятий по направлению:\n"+"Java-разработчик с нуля\n\n"+
-                "Понедельник 12:00\n"+
+        String makeNotification = "Расписание занятий по направлению:\n" + "Java-разработчик с нуля\n\n" +
+                "Понедельник 12:00\n" +
                 "Четверг 19:00";
 
-        String willRemindMessage ="Теперь я смогу напоминать о начале занятия и помогать тебе размышлять об изученном материале после него.\n" +
+        String willRemindMessage = "Теперь я смогу напоминать о начале занятия и помогать тебе размышлять об изученном материале после него.\n" +
                 "\n" +
                 "Давай начнем нашу работу с постановки цели. Четко сформулированная цель обучения поможет тебе поддерживать мотивацию.\n" +
                 "\n" +
                 "Подумай минутку и напиши свою цель. Ты сможешь изменить ее с помощью команды \"Измени цель";
+
 
         SendMessage messageGreetings = new SendMessage(idStudent, greetings);
         execute(messageGreetings);
@@ -348,7 +581,6 @@ public class Bot extends TelegramLongPollingBot {
 
         SendMessage messageGreetingsWillRemind = new SendMessage(idStudent, willRemindMessage);
         execute(messageGreetingsWillRemind);
-
 
 
         sendMessageInMainMenu(message, idStudent);
@@ -471,7 +703,7 @@ public class Bot extends TelegramLongPollingBot {
 
         row = new KeyboardRow();
         row.add("НАСТРОЙКИ БОТА");
-        row.add("ПОДБОРИ И ЗАМОТИВИРУЙ МЕНЯ");
+        row.add("ПОДБОДРИ И ЗАМОТИВИРУЙ МЕНЯ");
         keyboardRowsList.add(row);
 
         replyKeyboardMarkup.setKeyboard(keyboardRowsList);
@@ -593,7 +825,7 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         KeyboardRow row = new KeyboardRow();
-        row.add("УНИВИРАСАЛЬНАЯ");
+        row.add("УНИВЕРСАЛЬНАЯ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
@@ -633,7 +865,7 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         KeyboardRow row = new KeyboardRow();
-        row.add("НЕЗАКОНЧЕНННЫЕ ПРЕДЛОЖЕНИЯ");
+        row.add("НЕЗАКОНЧЕННЫЕ ПРЕДЛОЖЕНИЯ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
@@ -778,6 +1010,7 @@ public class Bot extends TelegramLongPollingBot {
         emotionVideoMenu(sendMessage, idStudent);
         execute(sendMessage);
     }
+
 
 }
 
