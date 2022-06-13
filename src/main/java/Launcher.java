@@ -21,21 +21,26 @@ public class Launcher {
                 .withIdentity("sendNotification")
                 .build();
 
-        Trigger trigger4 = TriggerBuilder
+        Trigger lessonNotification1 = TriggerBuilder
                 .newTrigger()
-                .withIdentity("EveryDay")
+                .withIdentity("Lesson")
                 .withSchedule(
-                        CronScheduleBuilder.dailyAtHourAndMinute(23, 07))
+                        CronScheduleBuilder.weeklyOnDayAndHourAndMinute(1,12,0))
+                .build();
+
+        Trigger lessonNotification2 = TriggerBuilder
+                .newTrigger()
+                .withIdentity("Lesson")
+                .withSchedule(
+                        CronScheduleBuilder.weeklyOnDayAndHourAndMinute(4,19,0))
                 .build();
 
 
         Scheduler scheduler = new StdSchedulerFactory().getScheduler();
         scheduler.getContext().put("bot", bot);
         scheduler.start();
-        scheduler.scheduleJob(jobSendNotification, trigger4);
-
-
-
+        scheduler.scheduleJob(jobSendNotification, lessonNotification1);
+        scheduler.scheduleJob(jobSendNotification, lessonNotification2);
 
     }
 }

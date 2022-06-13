@@ -96,7 +96,7 @@ public class Bot extends TelegramLongPollingBot {
                 sendMessageInReflectionOpen(message, idStudent);
             }
 
-            if (message.getText().equalsIgnoreCase("После онлайн-урока")) {
+            if (message.getText().equalsIgnoreCase("ПОСЛЕ ОНЛАЙН-УРОКА")) {
                 isStartTestVFM = true;
                 isStartTestAT = true;
                 sendMessageInReflectionOnlineLessonMenu(message, idStudent);
@@ -108,10 +108,9 @@ public class Bot extends TelegramLongPollingBot {
             }
 
             if (message.getText().equalsIgnoreCase("Очень быстрая методика")) {
-                sendMessageInVeryFasMethod(message, idStudent);
+                sendMessageInVeryFastMethod(message, idStudent);
             }
-            System.out.println("amountAnswerVFM = " + amountAnswerVFM);
-            System.out.println("isStartTestVFM = "+ isStartTestVFM);
+
             measurementVeryFastMethode(update, message, idStudent, amountAnswerVFM, isStartTestVFM);
             answerGetFromStudentVeryFastMethode(update, message, idStudent, isStartTestVFM);
 
@@ -129,9 +128,9 @@ public class Bot extends TelegramLongPollingBot {
         int valueAnswerVFM = Integer.parseInt(message.getText());
 
         if (isStartTestVFM) {
-            arrayListAnswersVFM.add(valueAnswerVFM);
-            sendMessageInVeryFasMethod(message, idStudent);
             amountAnswerVFM++;
+            arrayListAnswersVFM.add(valueAnswerVFM);
+            sendMessageInVeryFastMethod(message, idStudent);
         }
 
     }
@@ -151,6 +150,7 @@ public class Bot extends TelegramLongPollingBot {
     @SneakyThrows
     private void answerGetFromStudent(Update update, Message message, String idStudent, boolean isStartTestSOAM) {
         if (isStartTestSOAM) {
+
             if (message.getText().equals("совсем не соответствует")) {
                 valueAnswer = 0;
                 arrayListAnswersSOAM.add(valueAnswer);
@@ -330,8 +330,27 @@ public class Bot extends TelegramLongPollingBot {
                 "\n" +
                 "Данные полученные от тебя в этих тестах помогут скорректировать твой учебный процесс так, чтобы курс принес тебе еще больше пользы!";
 
+        String makeNotification = "Расписание занятий по направлению:\n"+"Java-разработчик с нуля\n\n"+
+                "Понедельник 12:00\n"+
+                "Четверг 19:00";
+
+        String willRemindMessage ="Теперь я смогу напоминать о начале занятия и помогать тебе размышлять об изученном материале после него.\n" +
+                "\n" +
+                "Давай начнем нашу работу с постановки цели. Четко сформулированная цель обучения поможет тебе поддерживать мотивацию.\n" +
+                "\n" +
+                "Подумай минутку и напиши свою цель. Ты сможешь изменить ее с помощью команды \"Измени цель";
+
         SendMessage messageGreetings = new SendMessage(idStudent, greetings);
         execute(messageGreetings);
+
+        SendMessage messageGreetingsMakeNotification = new SendMessage(idStudent, makeNotification);
+        execute(messageGreetingsMakeNotification);
+
+        SendMessage messageGreetingsWillRemind = new SendMessage(idStudent, willRemindMessage);
+        execute(messageGreetingsWillRemind);
+
+
+
         sendMessageInMainMenu(message, idStudent);
         amountAnswerVFM = 0;
         amountAnswersSOAM = 0;
@@ -408,7 +427,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    public void sendMessageInVeryFasMethod(Message message, String idStudent) {
+    public void sendMessageInVeryFastMethod(Message message, String idStudent) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(idStudent);
