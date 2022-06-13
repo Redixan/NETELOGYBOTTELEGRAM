@@ -28,6 +28,7 @@ public class Launcher {
                         CronScheduleBuilder.dailyAtHourAndMinute(23, 07))
                 .build();
 
+
         Scheduler scheduler = new StdSchedulerFactory().getScheduler();
         scheduler.getContext().put("bot", bot);
         scheduler.start();

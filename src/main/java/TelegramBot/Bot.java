@@ -1,6 +1,7 @@
 package TelegramBot;
 
 import Questionnaire.ScalesOfAcademicMotivation;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -15,11 +16,16 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.vdurmont.emoji.EmojiParser.parseToUnicode;
+
 public class Bot extends TelegramLongPollingBot {
 
-    int amountAnswersSOAM =0;
+    int amountAnswersSOAM = 0;
     int valueAnswer = 0;
     boolean isStartTestSOAM = false;
+    boolean isStartTestVeryFastMethod = false;
+    boolean isStartTestAfterTask = false;
+
     ArrayList<Integer> arrayListAnswersSOAM = new ArrayList();
     String studentGeneralGoal = "Твоя Цель";
 
@@ -35,33 +41,37 @@ public class Bot extends TelegramLongPollingBot {
                 greetingsFromBot(update, message, idStudent);
 
             if (message.getText().equals("Моя Цель")) {
-                sendMessageMenuGoal(message);
+                sendMessageMenuGoal(message, idStudent);
             }
 
             if (message.getText().equals("Изменить цель")) {
-                sendMessageInMainMenu(message);
+                sendMessageInMainMenu(message, idStudent);
             }
 
             if (message.getText().equals("Помоги поставить цель")) {
 
-                String helpTextGoal = "Если у тебя есть немного времени, подумай что в жизни..\n\n" + "Подумай минутку и напиши свою цель";
+                String helpTextGoal = "Если у тебя есть немного времени, подумай что в жизни тебя больше всего вдохновляет, какой бы ты хотел(а) видеть свою жизнь в будущем.\n" +
+                        "Теперь поразмышляй о том, как можно добиться этого? Какими способами? Как тебе в этом поможет обучение?\n\n" + "Подумай минутку и напиши свою цель";
                 SendMessage sendMessagesHelpTextGoal = new SendMessage(update.getMessage().getChatId().toString(), helpTextGoal);
                 execute(sendMessagesHelpTextGoal);
-                sendMessageInMainMenu(message);
             }
 
-            if (message.getText().equals("Покажи динамику")) {
-                sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Покажи динамику")) {
+                sendMessageInMainMenu(message, idStudent);
             }
 
-            if (message.getText().equals("Мои программы"))
-                sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Мои программы"))
+                sendMessageInMainMenu(message, idStudent);
 
-            if (message.getText().equals("Моя мотивация")) {
-                sendMessageInMotivation(message);
+            if (message.getText().equalsIgnoreCase("Моя мотивация")) {
+                if (amountAnswersSOAM == 16) {
+                    amountAnswersSOAM = 0;
+                    isStartTestSOAM = false;
+                }
+                sendMessageInMotivation(message, idStudent);
             }
 
-            if (message.getText().equals("Измерь мотивацию")) {
+            if (message.getText().equalsIgnoreCase("Измерь мотивацию")) {
                 studentMotivation(update, message, idStudent);
             }
 
@@ -70,22 +80,26 @@ public class Bot extends TelegramLongPollingBot {
             motivationOutputInformation(update, message, idStudent, amountAnswersSOAM);
 
 
-        if (message.getText().equals("Настройки Бота"))
-            sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Настройки бота"))
+                sendMessageInMainMenu(message, idStudent);
 
-        if (message.getText().equals("Рефлексия"))
-            sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Рефлексия"))
+                sendMessageInMainMenu(message, idStudent);
 
-        if (message.getText().equals("Подбодри и Замотивируй меня"))
-            sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Подбодри и Замотивируй меня"))
+                sendMessageInMainMenu(message, idStudent);
 
-        if (message.getText().equals("Главное меню")) {
-            sendMessageInMainMenu(message);
+            if (message.getText().equalsIgnoreCase("Главное меню")) {
+                sendMessageInMainMenu(message, idStudent);
+            }
+
+            if (message.getText().equalsIgnoreCase("После онлайн-урока")) {
+                sendMessageInMainMenu(message, idStudent);
+            }
+
         }
 
     }
-
-}
 
     @SneakyThrows
     private void answerGetFromStudent(Update update, Message message, String idStudent) {
@@ -139,7 +153,7 @@ public class Bot extends TelegramLongPollingBot {
             String domenantMotivation = "";
             String generalMotivationOutput = "";
 
-            String[] namesOfMotivation = new String[]{"Познавательная мотивация","Мотивация достижения","Внешняя ","Амотивация "};
+            String[] namesOfMotivation = new String[]{"Познавательная мотивация", "Мотивация достижения", "Внешняя ", "Амотивация "};
             int[] allValuesOfMotivation = new int[]{cognitiveMotivation, achievementMotivation, externalMotivation, amotivation};
             String[] feedbackOnMotivation = new String[]{
                     "ты учишься, потому что стремишься узнать новое, понять изучаемый предмет, ты испытываешь интерес и удовольствие в процессе познания.",
@@ -152,33 +166,65 @@ public class Bot extends TelegramLongPollingBot {
 
             String itMeansThat = "";
             for (int i = 0; i < allValuesOfMotivation.length; i++)
-                if (domenantMotivationValue < allValuesOfMotivation[i]){
+                if (domenantMotivationValue < allValuesOfMotivation[i]) {
                     domenantMotivationValue = allValuesOfMotivation[i];
                     domenantMotivation = namesOfMotivation[i];
                     itMeansThat = feedbackOnMotivation[i];
                 }
 
-            if(generalMotivation <= 0 ){
+            if (generalMotivation <= 0) {
                 generalMotivationOutput = "Очень низкий";
             }
-            if(generalMotivation > 0 && generalMotivation <= 12 ){
+            if (generalMotivation > 0 && generalMotivation <= 12) {
                 generalMotivationOutput = "Низкий";
             }
-            if(generalMotivation > 12 && generalMotivation <= 24 ){
+            if (generalMotivation > 12 && generalMotivation <= 24) {
                 generalMotivationOutput = "Средний";
             }
-            if(generalMotivation > 24 && generalMotivation <= 48 ){
+            if (generalMotivation > 24 && generalMotivation <= 48) {
                 generalMotivationOutput = "Высокий";
             }
 
+            String books = EmojiParser.parseToUnicode(":books:");
+            String trophy = EmojiParser.parseToUnicode(":trophy:");
+            String moneybag = EmojiParser.parseToUnicode(":moneybag:");
+            String unamused = EmojiParser.parseToUnicode(":unamused:");
+            String white_large_square = EmojiParser.parseToUnicode(":white_large_square:");
+            String red_large_square = EmojiParser.parseToUnicode(":red_large_square:");
+            String black_large_square = EmojiParser.parseToUnicode(":black_large_square:");
+            String blue_large_square = EmojiParser.parseToUnicode(":blue_large_square:");
+            String green_large_square = EmojiParser.parseToUnicode(":green_large_square:");
+
+            String cognitive = new String(new char[cognitiveMotivation]).replace("\0", black_large_square);
+            String achievement = new String(new char[achievementMotivation]).replace("\0", black_large_square);
+            String external = new String(new char[externalMotivation]).replace("\0", black_large_square);
+            String amotiv = new String(new char[amotivation]).replace("\0", black_large_square);
+
+            String cognitiveWhite = new String(new char[12 - cognitiveMotivation]).replace("\0", white_large_square);
+            String achievementWhite = new String(new char[12 - achievementMotivation]).replace("\0", white_large_square);
+            String externalWhite = new String(new char[12 - externalMotivation]).replace("\0", white_large_square);
+            String amotivWhite = new String(new char[12 - amotivation]).replace("\0", white_large_square);
+
+            String legend = books + " - познавательная мотивация\n"
+                    + trophy + " - мотивация достижения\n"
+                    + moneybag + " - внешняя мотивация\n"
+                    + unamused + " - амотивация";
+
+            String diagram = "Мотивация\n\n" +
+                    books + cognitive + cognitiveWhite + "\n"
+                    + trophy + achievement + achievementWhite + "\n"
+                    + moneybag + external + externalWhite + "\n"
+                    + unamused + amotiv + amotivWhite;
+
+
             String finishTestSOAM = "Молодец! Вот результаты теста:\n" +
                     "\n" +
-                    "Твой  общий уровень мотивации: " + generalMotivationOutput +"\n\n"+
-                    "Твоя доминирующая мотивация: " + domenantMotivation+"\n\n"+
-                    "Это значит, что " + itMeansThat +"\n"+
+                    "Твой  общий уровень мотивации: " + generalMotivationOutput + "\n\n" +
+                    "Твоя доминирующая мотивация: " + domenantMotivation + "\n\n" +
+                    "Это значит, что " + itMeansThat + "\n" +
                     "\n" +
-                    "ДИАГРАММА\n" +
-                    "\n" +
+                    diagram + "\n\n" +
+                    legend + "\n\n" +
                     "1. Шкала мотивации познания направлена на диагностику стремления узнать новое, понять изучаемый предмет, связанного с переживанием интереса и удовольствия в процессе познания.\n" +
                     "2. Шкала мотивации достижения измеряет стремление добиваться максимально высоких результатов в учебе, испытывать удовольствие в процессе решения трудных задач. \n" +
                     "3. Шкала внешней мотивации измеряет побуждение к учебе, обусловленное ощущением стыда и чувства долга перед собой и другими значимыми людьми и необходимостью следовать требованиям, диктуемым социумом, чтобы избежать возможных проблем.\n" +
@@ -186,12 +232,13 @@ public class Bot extends TelegramLongPollingBot {
                     "\n" +
                     "\n";
 
-            sendMessageInMainMenu(message);
+            sendMessageInMainMenu(message, idStudent);
             SendMessage sendMessage = new SendMessage(idStudent, finishTestSOAM);
             execute(sendMessage);
-            sendMessageInMainMenu(message);
+            sendMessageInMainMenu(message, idStudent);
 
         }
+
     }
 
     @SneakyThrows
@@ -216,8 +263,8 @@ public class Bot extends TelegramLongPollingBot {
                 "5) вполне соответствует";
 
         String mainQuestion = "Почему Вы в настоящее время посещаете курсы?";
-        sendMessageQuestions(message, idStudent);
         SendMessage sendMessagesManual = new SendMessage(idStudent, manual);
+        sendMessageQuestions(message, idStudent);
         execute(sendMessagesManual);
         sendMessagesManual = new SendMessage(idStudent, mainQuestion);
         execute(sendMessagesManual);
@@ -233,10 +280,10 @@ public class Bot extends TelegramLongPollingBot {
                 "Данные полученные от тебя в этих тестах помогут скорректировать твой учебный процесс так, чтобы курс принес тебе еще больше пользы!";
 
         SendMessage messageGreetings = new SendMessage(idStudent, greetings);
-            execute(messageGreetings);
-            sendMessageInMainMenu(message);
-            amountAnswersSOAM = 0;
-            isStartTestSOAM = false;
+        execute(messageGreetings);
+        sendMessageInMainMenu(message, idStudent);
+        amountAnswersSOAM = 0;
+        isStartTestSOAM = false;
     }
 
     @Override
@@ -258,39 +305,79 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    public void sendMessageInMainMenu(Message message) {
+    public void sendMessageInMainMenu(Message message, String idStudent) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText("Выбери раздел");
-        setMainMenu(sendMessage);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Выберите раздел");
+        setMainMenu(sendMessage, idStudent);
         execute(sendMessage);
     }
 
     @SneakyThrows
-    public void sendMessageInMotivation(Message message) {
+    public void sendMessageInReflectionOpen(Message message, String idStudent) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText("Что я должен сделать?");
-        setMotivationMenu(sendMessage);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Я знаю несколько техник рефлексии, которые подходят для разных ситуаций");
+        reflectionMenu(sendMessage, idStudent);
         execute(sendMessage);
     }
 
     @SneakyThrows
-    public void sendMessageMenuGoal(Message message) {
+    public void sendMessageInReflectionMenuUniversal(Message message, String idStudent) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(message.getChatId().toString());
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Отличный выбор");
+        reflectionMenu(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    public void sendMessageInMotivation(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
         sendMessage.setText("Что я должен сделать?");
-        setGoalMenu(sendMessage);
+        setMotivationMenu(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    public void sendMessageMenuGoal(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Что я должен сделать?");
+        setGoalMenu(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    public void sendMessageInVeryFasMethod(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Ваш ответ:");
+        buttonsOneToTen(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+    @SneakyThrows
+    public void sendMessageInAfterTask(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Ваш ответ:");
+        buttonsOneToTen(sendMessage, idStudent);
         execute(sendMessage);
     }
 
 
-    public void setMainMenu(SendMessage sendMessage) {
+    public void setMainMenu(SendMessage sendMessage, String idStudent) {
         SendMessage message = new SendMessage();
-        message.setChatId("711028535");
+        message.setChatId(idStudent);
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboardRowsList = new ArrayList<>();
@@ -301,27 +388,27 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         KeyboardRow row = new KeyboardRow();
-        row.add("Моя Цель");
-        row.add("Мои программы");
+        row.add("МОЯ ЦЕЛЬ");
+        row.add("МОИ ПРОГРАММЫ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
-        row.add("Моя мотивация");
-        row.add("Рефлексия");
+        row.add("МОЯ МОТИВАЦИЯ");
+        row.add("РЕФЛЕКСИЯ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
-        row.add("Настройки Бота");
-        row.add("Подбодри и Замотивируй меня");
+        row.add("НАСТРОЙКИ БОТА");
+        row.add("ПОДБОРИ И ЗАМОТИВИРУЙ МЕНЯ");
         keyboardRowsList.add(row);
 
         replyKeyboardMarkup.setKeyboard(keyboardRowsList);
         message.setReplyMarkup(replyKeyboardMarkup);
     }
 
-    public void setMotivationMenu(SendMessage sendMessage) {
+    public void setMotivationMenu(SendMessage sendMessage, String idStudent) {
         SendMessage message = new SendMessage();
-        message.setChatId("711028535");
+        message.setChatId(idStudent);
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboardRowsList = new ArrayList<>();
@@ -332,16 +419,16 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         KeyboardRow row = new KeyboardRow();
-        row.add("Измерь мотивацию");
-        row.add("Добавь новые успехи");
+        row.add("ИЗМЕРЬ МОТИВАЦИЮ");
+        row.add("ДОБАВЬ НОВЫЕ УСПЕХИ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
-        row.add("Покажи текущую мотивацию");
+        row.add("ПОКАЖИ ТЕКУЩУЮ МОТИВАЦИЮ");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
-        row.add("Главное меню");
+        row.add("ГЛАВНОЕ МЕНЮ");
         keyboardRowsList.add(row);
 
         replyKeyboardMarkup.setKeyboard(keyboardRowsList);
@@ -353,7 +440,7 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(idStudent);
-        sendMessage.setText(".");
+        sendMessage.setText("Ваш ответ");
         setAnswerMenuButtons(sendMessage, idStudent);
         execute(sendMessage);
     }
@@ -362,49 +449,6 @@ public class Bot extends TelegramLongPollingBot {
     public void setAnswerMenuButtons(SendMessage sendMessage, String idStudent) {
         SendMessage message = new SendMessage();
         sendMessage.setChatId(idStudent);
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-
-        List<InlineKeyboardButton> Buttons = new ArrayList<InlineKeyboardButton>();
-
-        List<List<InlineKeyboardButton>> keyboardRow1 = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboardRow2 = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboardRow3 = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboardRow4 = new ArrayList<>();
-        List<List<InlineKeyboardButton>> keyboardRow5 = new ArrayList<>();
-
-        InlineKeyboardButton doesntMatchAll = new InlineKeyboardButton();
-        doesntMatchAll.setText("совсем не соответствует");
-        doesntMatchAll.setCallbackData("совсем не соответствует");
-        Buttons.add(doesntMatchAll);
-        InlineKeyboardButton doesntCorrespond = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("скорее не соответствует");
-        Buttons.add(doesntMatchAll);
-        InlineKeyboardButton somethingBetween = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("нечто среднее");
-        Buttons.add(doesntMatchAll);
-        InlineKeyboardButton ratherCorresponds = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("скорее соответствует");
-        Buttons.add(doesntMatchAll);
-        InlineKeyboardButton quiteConsistent = new InlineKeyboardButton();
-        doesntMatchAll.setCallbackData("вполне соответствует");
-
-        keyboardRow1.add(doesntMatchAll);
-
-        Buttons.add(doesntMatchAll);
-        Buttons.add(doesntCorrespond);
-        Buttons.add(somethingBetween);
-        Buttons.add(ratherCorresponds);
-        Buttons.add(quiteConsistent);
-
-        inlineKeyboardMarkup.setKeyboard(keyboard);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-        execute(message);
-    }
-
-    public void setGoalMenu(SendMessage sendMessage) {
-        SendMessage message = new SendMessage();
-        message.setChatId("711028535");
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         List<KeyboardRow> keyboardRowsList = new ArrayList<>();
@@ -415,17 +459,282 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
 
         KeyboardRow row = new KeyboardRow();
-        row.add("Помоги поставить цель");
-        row.add("Изменить цель");
+        row.add("совсем не соответствует");
         keyboardRowsList.add(row);
 
         row = new KeyboardRow();
-        row.add("Покажи динамику");
-        row.add("Главное меню");
+        row.add("скорее не соответствует");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("нечто среднее");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("скорее соответствует");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("вполне соответствует");
         keyboardRowsList.add(row);
 
         replyKeyboardMarkup.setKeyboard(keyboardRowsList);
         message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    public void setGoalMenu(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        message.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("ПОМОГИ ПОСТАВИТЬ ЦЕЛЬ");
+        row.add("ИЗМЕНИТЬ ЦЕЛЬ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОКАЖИ ДИНАМИКУ");
+        row.add("ГЛАВНОЕ МЕНЮ");
+        keyboardRowsList.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    public void reflectionMenu(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        sendMessage.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("УНИВИРАСАЛЬНАЯ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОСЛЕ ОНЛАЙН-УРОКА");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОСЛЕ ВИДЕО-УРОКА");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОСЛЕ ВЫПОЛНЕНИЯ ПРОЕКТА ИЛИ ДЗ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОСЛЕ РЕФЛЕКСИИ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ГЛАВНОЕ МЕНЮ");
+        keyboardRowsList.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    public void reflectionOnlineLessonMenu(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        sendMessage.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("НЕЗАКОНЧЕНННЫЕ ПРЕДЛОЖЕНИЯ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("В ФОРМЕ ОПРОСА");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ОЧЕНЬ БЫСТРАЯ МЕТОДИКА");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОСЛЕ РЕФЛЕКСИИ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("НАЗАД <=");
+        keyboardRowsList.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    public void buttonsOneToTen(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        sendMessage.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("1");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("2");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("3");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("4");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("5");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("6");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("7");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("8");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("9");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("10");
+        keyboardRowsList.add(row);
+
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    public void cheerMeUpMenu(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        sendMessage.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("РАССКАЖИ ПРО МОИ УСПЕХИ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОДБОДРИ МЕНЯ МЕМОМ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ЗАМОТИВИРУЙ МЕНЯ СЛОВАМИ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ЗАМОТИВИРУЙ МЕНЯ ВИДЕОРОЛИКОМ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("ПОДБОДРИ МЕНЯ ВИДЕОРОЛИКОМ");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("НАЗАД <=");
+        keyboardRowsList.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+
+    @SneakyThrows
+    public void sendMessageCheerMeUp(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Ты потрясающий");
+        cheerMeUpMenu(sendMessage, idStudent);
+        execute(sendMessage);
+    }
+
+
+
+
+    public void emotionVideoMenu(SendMessage sendMessage, String idStudent) {
+        SendMessage message = new SendMessage();
+        sendMessage.setChatId(idStudent);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRowsList = new ArrayList<>();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("мне грустно");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("мне страшно");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("мне одиноко");
+        keyboardRowsList.add(row);
+
+        row = new KeyboardRow();
+        row.add("НАЗАД <=");
+        keyboardRowsList.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRowsList);
+        message.setReplyMarkup(replyKeyboardMarkup);
+    }
+
+    @SneakyThrows
+    public void sendMessageInYourFeelings(Message message, String idStudent) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(idStudent);
+        sendMessage.setText("Что ты сейчас чувствуешь?");
+        emotionVideoMenu(sendMessage, idStudent);
+        execute(sendMessage);
     }
 
 }
